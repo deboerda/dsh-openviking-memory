@@ -1,0 +1,12 @@
+# 挂载片段: 添加到 %DSH_HOME%\profiles\desktop\cordis.patch.yml (按该文件现有惯例)
+
+- insert:
+    - id: memory-openviking
+      name: '@deepseek-ai/dsh-memory-openviking'
+      config:
+        baseUrl: http://127.0.0.1:1933
+        account: dsh
+        user: main
+        apiKey: <OPENVIKING_USER_KEY>
+    - id: tool-memory
+      name: '@deepseek-ai/dsh-tool-memory'

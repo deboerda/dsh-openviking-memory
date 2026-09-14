@@ -1,7 +1,9 @@
 # DSH OpenViking Long-Term Memory Kit
 
 DSH Desktop（DeepSeek Harness）长期记忆的完整落地套件：OpenViking 服务端配置、
-本地 embedding 方案、DSH 插件接入片段、启停脚本。换机器/重装后按本仓库即可复现。
+本地 embedding 方案、DSH 插件接入片段、启停脚本、**换机一键部署层**。
+
+> **v0.5.0**（2026-09-14）— 新增 `deploy/` 部署层与 `CHANGELOG.md`。换机照 [deploy/README.md](deploy/README.md) 走，15 分钟跑通。
 
 ## 架构
 
@@ -24,14 +26,19 @@ DSH Desktop (web / unity profile)
 
 | 路径 | 说明 |
 |---|---|
+| `deploy/` | **换机一键部署层**：可移植启停/切换/图标/快捷方式脚本 + 配置模板 + 部署手册（推荐入口） |
 | `scripts/start_openviking.ps1` | 一键启动 embedding + OpenViking（幂等，带健康检查，`-Silent` 无弹窗） |
 | `scripts/stop_openviking.ps1` | 一键停止两个服务 |
 | `config/ov.conf.example` | OpenViking 服务端配置模板（密钥为占位符） |
 | `config/cordis-patch.web.yml` | DSH web profile 挂载片段 |
 | `config/cordis-patch.unity.yml` | DSH unity profile 挂载片段（`insert:` 写法） |
+| `config/cordis-patch.desktop.yml` | DSH Desktop profile 挂载片段（`insert:` 写法） |
 | `vendor/dsh-memory-openviking/` | 上游插件 v0.4.0 源码（MIT，归原作者所有，见其 README/LICENSE） |
 
 ## 快速部署
+
+> 换机/重装直接看 **[deploy/README.md](deploy/README.md)**：脚本以 `$PSScriptRoot` 为基准、附配置模板与
+> 踩坑表。下面是最小步骤版。
 
 ### 1. 服务端（Windows）
 
@@ -86,10 +93,19 @@ npm pack @openviking/sdk@0.1.0   # 解包到 $HOME\.dsh\profiles\node_modules\@o
 重启 DSH Desktop。每个会话自动捕获 → 蒸馏 → 下次会话自动注入；也可手动调用
 `memory_recall / memory_write / memory_search / memory_profile / memory_forget`。
 
-### 3. 桌面图标（可选）
+### 3. 桌面快捷方式（可选但推荐）
 
-用 `scripts\start_openviking.ps1` 建一个桌面快捷方式（powershell -File，图标自定），
-先点它再开 DSH。服务端必须在 DSH 之前启动（插件失败隔离，后起也会重试补上）。
+```powershell
+powershell -ExecutionPolicy Bypass -File deploy\make-shortcuts.ps1
+```
+
+在桌面生成「**OpenViking记忆-启动**」（绿 ▶）/「**OpenViking记忆-停止**」（红 ■）两个带图标的快捷方式。
+日常：先点启动 → 弹「已就绪」→ 再开 DSH；退出 DSH → 点停止。服务端必须在 DSH 之前启动
+（插件具备失败隔离，后起也会重试补上）。
+
+> ⚠️ **只在资源管理器里双击这些快捷方式，别从 DSH 的工具调用/前台 pwsh 里启动服务**：
+> 调用结束时整棵进程树会被 job object 回收，服务静默消失（日志表现为 `Connection error` +
+> `Embedding circuit breaker is open`）。
 
 ## 注意事项
 

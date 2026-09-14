@@ -1,0 +1,48 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 1933,
+    "auth_mode": "api_key",
+    "root_api_key": "<ROOT_API_KEY>",
+    "cors_origins": ["*"],
+    "agent_evolution": { "enabled": true }
+  },
+  "storage": {
+    "workspace": "<DATA_DIR>",
+    "vectordb": { "name": "context", "backend": "local" },
+    "agfs": { "backend": "local" }
+  },
+  "embedding": {
+    "dense": {
+      "provider": "openai",
+      "model": "bge-m3",
+      "api_key": "unused",
+      "api_base": "http://127.0.0.1:8089/v1",
+      "dimension": 1024,
+      "input": "text"
+    },
+    "text_source": "content_only",
+    "max_input_tokens": 4096
+  },
+  "vlm": {
+    "provider": "openai",
+    "model": "<VLM_MODEL>",
+    "api_key": "<VLM_API_KEY>",
+    "api_base": "<VLM_BASE_URL>",
+    "temperature": 0.0,
+    "max_retries": 2,
+    "media": { "enabled": false },
+    "max_tokens": 8192,
+    "reasoning_effort": "low"
+  },
+  "auto_generate_l0": true,
+  "auto_generate_l1": true,
+  "default_search_mode": "thinking",
+  "default_search_limit": 3,
+  "memory": {
+    "version": "v2",
+    "extraction_enabled": true,
+    "extraction_output_format": "python",
+    "session_skill_extraction_enabled": false
+  }
+}
