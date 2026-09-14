@@ -1,0 +1,10 @@
+{
+  "name": "dsh-memory-openviking",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@openviking/sdk": "0.1.0"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "@deepseek-ai/dsh-memory-openviking",
+  "version": "0.4.0",
+  "description": "Host-plane memory service for DeepSeek Harness backed by a local OpenViking server: automatic session capture (write-behind with retry + dead-letter), session-scoped recall, and profile injection primitives.",
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "client.js"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@openviking/sdk": "0.1.0",
+    "@deepseek-ai/dsh-settings": "^0.1.0-rc.6"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.1",
+    "@deepseek-ai/schemastery": ">=3.18.1"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/schemastery": "3.18.1"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-api-remotes"
+      ]
+    }
+  }
+}
