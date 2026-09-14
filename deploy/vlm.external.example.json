@@ -1,7 +1,7 @@
 {
   "_comment": "External distillation VLM (any OpenAI-compatible endpoint). Contains a secret - never commit. Apply with: switch-vlm.ps1 -StopLocal",
-  "api_base": "<VLM_BASE_URL>",
-  "model": "<VLM_MODEL>",
+  "api_base": "https://copilot-dev.tongyuan.cc/api/openai/v1",
+  "model": "glm-5.3-flash",
   "api_key": "<VLM_API_KEY>",
   "max_tokens": 8192,
   "reasoning_effort": "low"

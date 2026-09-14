@@ -3,7 +3,7 @@
 DSH Desktop（DeepSeek Harness）长期记忆的完整落地套件：OpenViking 服务端配置、
 本地 embedding 方案、DSH 插件接入片段、启停脚本、**换机一键部署层**。
 
-> **v0.5.0**（2026-09-14）— 新增 `deploy/` 部署层与 `CHANGELOG.md`。换机照 [deploy/README.md](deploy/README.md) 走，15 分钟跑通。
+> **v0.5.1**（2026-09-14）— 新增 `deploy/` 部署层与 `CHANGELOG.md`；示例配置已填入默认蒸馏端点。换机照 [deploy/README.md](deploy/README.md) 走，15 分钟跑通。
 
 ## 架构
 
@@ -54,7 +54,8 @@ curl -L -o E:\AI\models\bge-m3\bge-m3-Q8_0.gguf `
 
 - `<ROOT_API_KEY>` — 服务端 root key（自定；设了它即开启 `api_key` 认证）
 - `<DATA_DIR>` — 记忆数据目录（如 `E:/AI/openviking/data`）
-- `<VLM_MODEL>` / `<VLM_API_KEY>` / `<VLM_BASE_URL>` — 任意 OpenAI 兼容 LLM 端点（如 DeepSeek/GLM/Qwen）
+- `<VLM_MODEL>` / `<VLM_BASE_URL>` — 示例已填默认值 `glm-5.3-flash` @ `https://copilot-dev.tongyuan.cc/api/openai/v1`，可换任意 OpenAI 兼容端点
+- `<VLM_API_KEY>` — 该端点的 key（模板里唯一必填的密钥）
 
 先起 embedding 再起服务端（顺序由 `start_openviking.ps1` 保证）：
 

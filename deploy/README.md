@@ -48,7 +48,8 @@
 2. **写 OpenViking 配置**：把 `ov.conf.example` 复制成 `%USERPROFILE%\.openviking\ov.conf`，替换：
    - `<DATA_DIR>` — 记忆数据目录（建议和脚本同盘）
    - `<ROOT_API_KEY>` — 自己生成的 root key（开启了 `auth_mode: api_key`）
-   - `<VLM_API_KEY>` / `<VLM_BASE_URL>` — 蒸馏用的 OpenAI 兼容端点
+   - `<VLM_API_KEY>` — 蒸馏网关的 key。示例里 `api_base` / `model` 已填默认值
+     （`https://copilot-dev.tongyuan.cc/api/openai/v1` / `glm-5.3-flash`），要换端点直接改这两行即可
    ⚠️ 该文件必须是 **UTF-8 无 BOM**。带 BOM 会让服务端报
    `Invalid cache config: ... expected value at line 1 column 1` 而**起不来**。
    用记事本「另存为 → UTF-8」通常不加 BOM；PowerShell 里请用

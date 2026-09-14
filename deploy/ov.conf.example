@@ -26,9 +26,9 @@
   },
   "vlm": {
     "provider": "openai",
-    "model": "<VLM_MODEL>",
+    "model": "glm-5.3-flash",
     "api_key": "<VLM_API_KEY>",
-    "api_base": "<VLM_BASE_URL>",
+    "api_base": "https://copilot-dev.tongyuan.cc/api/openai/v1",
     "temperature": 0.0,
     "max_retries": 2,
     "media": { "enabled": false },
