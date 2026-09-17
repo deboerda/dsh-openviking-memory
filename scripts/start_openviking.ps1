@@ -30,10 +30,14 @@ if (Test-Port $EmbedPort) {
 }
 
 # 2. OpenViking server (reads ~/.openviking/ov.conf)
+#    Runs from its own venv: OpenViking pins mcp<2, and the global Python is on
+#    mcp 2.x for other MCP tools. Isolating avoids the FastMCP-vs-MCPServer clash.
+$ovServer = Join-Path $root 'openviking-venv\Scripts\openviking-server.exe'
+if (-not (Test-Path $ovServer)) { $ovServer = 'openviking-server' }
 if (Test-Port $OvPort) {
     Write-Host "OpenViking already up on :$OvPort"
 } else {
-    Start-Process -FilePath 'openviking-server' -ArgumentList @(
+    Start-Process -FilePath $ovServer -ArgumentList @(
         '--config', "$env:USERPROFILE\.openviking\ov.conf",
         '--host', '127.0.0.1', '--port', "$OvPort"
     ) -WindowStyle Hidden -RedirectStandardOutput (Join-Path $logDir 'openviking.out.log') -RedirectStandardError (Join-Path $logDir 'openviking.err.log')

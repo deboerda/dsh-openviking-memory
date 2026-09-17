@@ -43,7 +43,11 @@ DSH Desktop (web / unity profile)
 ### 1. 服务端（Windows）
 
 ```powershell
-pip install openviking --upgrade          # 需要 Python 3.10+
+# ⚠️ 装进独立 venv！OpenViking 依赖 mcp<2（FastMCP），而很多 MCP 工具用 mcp 2.x
+#    （FastMCP 已改名 MCPServer）。装到全局 Python 会被互相顶版本，服务端起不来：
+#    ModuleNotFoundError: No module named 'mcp.server.fastmcp'
+python -m venv E:\AI\openviking-venv
+E:\AI\openviking-venv\Scripts\python.exe -m pip install --upgrade openviking
 # 下载 bge-m3 embedding 模型 (634MB, Q8_0)
 mkdir E:\AI\models\bge-m3
 curl -L -o E:\AI\models\bge-m3\bge-m3-Q8_0.gguf `
