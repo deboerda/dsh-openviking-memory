@@ -58,7 +58,7 @@ curl -L -o E:\AI\models\bge-m3\bge-m3-Q8_0.gguf `
 
 - `<ROOT_API_KEY>` — 服务端 root key（自定；设了它即开启 `api_key` 认证）
 - `<DATA_DIR>` — 记忆数据目录（如 `E:/AI/openviking/data`）
-- `<VLM_MODEL>` / `<VLM_BASE_URL>` — 示例已填默认值 `glm-5.3-flash` @ `https://copilot-dev.tongyuan.cc/api/openai/v1`，可换任意 OpenAI 兼容端点
+- `<VLM_MODEL>` / `<VLM_BASE_URL>` — 示例模型名可用 `glm-5.3-flash` 等；`<VLM_BASE_URL>` 填任意 OpenAI 兼容端点（勿提交内网/公司域名）
 - `<VLM_API_KEY>` — 该端点的 key（模板里唯一必填的密钥）
 
 先起 embedding 再起服务端（顺序由 `start_openviking.ps1` 保证）：
