@@ -3,7 +3,7 @@
 ## v0.5.1 - 2026-09-14
 
 - `deploy/ov.conf.example`、`deploy/vlm.external.example.json`：蒸馏端点与模型填入默认值
-  （`https://copilot-dev.tongyuan.cc/api/openai/v1` / `glm-5.3-flash`），只留 `<ROOT_API_KEY>`、`<VLM_API_KEY>`、`<OPENVIKING_USER_KEY>`
+  （占位符 `<VLM_BASE_URL>` / 示例模型 `glm-5.3-flash`），只留 `<ROOT_API_KEY>`、`<VLM_API_KEY>`、`<OPENVIKING_USER_KEY>`
   三个真·密钥占位符 —— 换机复制即可用。
 - `README.md` / `deploy/README.md`：对应说明同步更新。
 
