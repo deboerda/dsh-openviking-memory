@@ -1,127 +1,72 @@
-# DSH OpenViking Long-Term Memory Kit
+# dsh-openviking-memory — Local Long-Term Memory Stack for DSH
 
-DSH Desktop（DeepSeek Harness）长期记忆的完整落地套件：OpenViking 服务端配置、
-本地 embedding 方案、DSH 插件接入片段、启停脚本、**换机一键部署层**。
+> Turn **DeepSeek Harness (DSH) Desktop** into an agent that **remembers across sessions**: capture → distill → embed → recall. This kit wires OpenViking server config, local embeddings, DSH plugins, and a portable deploy layer so another machine can be online in ~15 minutes.
 
-> **v0.5.1**（2026-09-14）— 新增 `deploy/` 部署层与 `CHANGELOG.md`；示例配置已填入默认蒸馏端点。换机照 [deploy/README.md](deploy/README.md) 走，15 分钟跑通。
+[![PowerShell](https://img.shields.io/badge/Deploy-PowerShell-5391FE?logo=powershell)](#)
+[![OpenViking](https://img.shields.io/badge/Memory-OpenViking-green)](#)
+[![Embedding](https://img.shields.io/badge/Embedding-llama.cpp%20bge--m3-orange)](#)
 
-## 架构
+## What it does for AI agent memory
+
+| Stage | Behavior |
+|-------|----------|
+| **Capture** | DSH host plugin records session turns |
+| **Distill** | OpenViking calls any OpenAI-compatible VLM to extract preferences / entities / events |
+| **Embed** | Local `llama.cpp` + **bge-m3** (CPU, Chinese-friendly, 1024-d) — no GPU required |
+| **Recall** | Next session injects `<memory_profile>`; tools: `memory_recall / write / search / profile / forget` |
+
+Result: agents keep durable project context without stuffing the entire chat history into every prompt.
+
+## Architecture
 
 ```
-DSH Desktop (web / unity profile)
-  └─ @deepseek-ai/dsh-memory-openviking   (host: 会话捕获 + 蒸馏触发)
-  └─ @deepseek-ai/dsh-tool-memory         (memory_* 工具 + <memory_profile> 注入)
-        │  HTTP Bearer X-API-Key (account/user 租户 key)
-┌───────▼───────────────────────────────┐
-│ OpenViking server  (127.0.0.1:1933)    │  蒸馏 VLM = 任意 OpenAI 兼容端点
-│  记忆库: viking://user/<user>/...       │  embedding = 本地 llama.cpp bge-m3 (:8089)
-└───────────────────────────────────────┘
+DSH Desktop (web / unity / desktop profiles)
+  ├─ dsh-memory-openviking   → capture + distill trigger
+  └─ dsh-tool-memory         → memory_* tools + profile inject
+           │  HTTP + X-API-Key
+           ▼
+OpenViking :1933
+  · store: viking://user/<user>/…
+  · VLM distill: configurable OpenAI-compatible endpoint
+  · embedding: localhost llama-server :8089 (bge-m3 GGUF)
 ```
 
-- **蒸馏模型**：OpenViking 服务端用配置的 VLM 把会话蒸馏成偏好/实体/事件（每次提交消耗该 API 的 token）。
-- **embedding**：OpenViking 需要 embedding 模型；仓库提供的方案是本地
-  `llama.cpp llama-server` + bge-m3 Q8 GGUF（CPU 即可，不占显存，中文友好，1024 维）。
+## Repo contents
 
-## 目录
+| Path | Role |
+|------|------|
+| `deploy/` | **One-click portability** — start/stop, shortcuts, templates, runbook |
+| `scripts/start_openviking.ps1` | Idempotent start + health checks (`-Silent`) |
+| `scripts/stop_openviking.ps1` | Clean shutdown |
+| `config/*.yml` / `ov.conf.example` | Cordis patches + server template (placeholders only) |
+| `vendor/dsh-memory-openviking/` | Upstream plugin sources (MIT) |
 
-| 路径 | 说明 |
-|---|---|
-| `deploy/` | **换机一键部署层**：可移植启停/切换/图标/快捷方式脚本 + 配置模板 + 部署手册（推荐入口） |
-| `scripts/start_openviking.ps1` | 一键启动 embedding + OpenViking（幂等，带健康检查，`-Silent` 无弹窗） |
-| `scripts/stop_openviking.ps1` | 一键停止两个服务 |
-| `config/ov.conf.example` | OpenViking 服务端配置模板（密钥为占位符） |
-| `config/cordis-patch.web.yml` | DSH web profile 挂载片段 |
-| `config/cordis-patch.unity.yml` | DSH unity profile 挂载片段（`insert:` 写法） |
-| `config/cordis-patch.desktop.yml` | DSH Desktop profile 挂载片段（`insert:` 写法） |
-| `vendor/dsh-memory-openviking/` | 上游插件 v0.4.0 源码（MIT，归原作者所有，见其 README/LICENSE） |
+## Quick deploy
 
-## 快速部署
+Follow **[deploy/README.md](deploy/README.md)** on a new Windows box. Minimal path:
 
-> 换机/重装直接看 **[deploy/README.md](deploy/README.md)**：脚本以 `$PSScriptRoot` 为基准、附配置模板与
-> 踩坑表。下面是最小步骤版。
+1. Dedicated venv + `openviking` (keep MCP versions isolated — FastMCP 1.x vs 2.x clash)
+2. Download bge-m3 GGUF · fill `ov.conf` placeholders · `start_openviking.ps1`
+3. Create account → copy **user key** into cordis patches · restart DSH
+4. Optional: `deploy\make-shortcuts.ps1` for desktop start/stop icons
 
-### 1. 服务端（Windows）
+## Design choices worth hiring for
 
-```powershell
-# ⚠️ 装进独立 venv！OpenViking 依赖 mcp<2（FastMCP），而很多 MCP 工具用 mcp 2.x
-#    （FastMCP 已改名 MCPServer）。装到全局 Python 会被互相顶版本，服务端起不来：
-#    ModuleNotFoundError: No module named 'mcp.server.fastmcp'
-python -m venv E:\AI\openviking-venv
-E:\AI\openviking-venv\Scripts\python.exe -m pip install --upgrade openviking
-# 下载 bge-m3 embedding 模型 (634MB, Q8_0)
-mkdir E:\AI\models\bge-m3
-curl -L -o E:\AI\models\bge-m3\bge-m3-Q8_0.gguf `
-  https://hf-mirror.com/gpustack/bge-m3-GGUF/resolve/main/bge-m3-Q8_0.gguf
-```
+- **Local-first embeddings** — privacy + zero embedding API cost
+- **Pluggable distill endpoint** — any OpenAI-compatible VLM; keys stay out of git
+- **Failure isolation** — plugins retry if memory server starts later; job-object-safe shortcut launch documented
+- **Multi-profile memory sharing** — web/unity profiles can share one account/user or isolate on purpose
 
-编辑 `config/ov.conf.example` → 保存为 `%USERPROFILE%\.openviking\ov.conf`，替换占位符：
+## Upstream
 
-- `<ROOT_API_KEY>` — 服务端 root key（自定；设了它即开启 `api_key` 认证）
-- `<DATA_DIR>` — 记忆数据目录（如 `E:/AI/openviking/data`）
-- `<VLM_MODEL>` / `<VLM_BASE_URL>` — 示例模型名可用 `glm-5.3-flash` 等；`<VLM_BASE_URL>` 填任意 OpenAI 兼容端点（勿提交内网/公司域名）
-- `<VLM_API_KEY>` — 该端点的 key（模板里唯一必填的密钥）
+- [zouyuanqing/dsh-memory-openviking](https://github.com/zouyuanqing/dsh-memory-openviking) (MIT)
+- [volcengine/OpenViking](https://github.com/volcengine/OpenViking) (AGPLv3)
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
 
-先起 embedding 再起服务端（顺序由 `start_openviking.ps1` 保证）：
+## Role
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\start_openviking.ps1
-```
+Integration & packaging of a **production-usable local memory stack** for desktop AI agents (DSH) — ops scripts, config, and deploy UX, not just a README dump of upstream docs.
 
-创建租户账号，拿到 **user key**（root key 只能访问管理 API，数据 API 需要 user key）：
+---
 
-```powershell
-curl -X POST http://127.0.0.1:1933/api/v1/admin/accounts `
-  -H "X-API-Key: <ROOT_API_KEY>" -H "Content-Type: application/json" `
-  -d '{"account_id":"dsh","admin_user_id":"main"}'
-# 返回 result.user_key —— 填入下方 DSH 配置
-```
-
-### 2. DSH 接入
-
-把两个插件包复制进 DSH 能解析的位置（本机为共享目录，DSH 各 profile 都能解析）：
-
-```powershell
-Copy-Item -Recurse vendor\dsh-memory-openviking\packages\dsh-memory-openviking `
-  $HOME\.dsh\profiles\node_modules\@deepseek-ai\dsh-memory-openviking
-Copy-Item -Recurse vendor\dsh-memory-openviking\packages\dsh-tool-memory `
-  $HOME\.dsh\profiles\node_modules\@deepseek-ai\dsh-tool-memory
-# 运行时依赖（零传递依赖）：
-npm pack @openviking/sdk@0.1.0   # 解包到 $HOME\.dsh\profiles\node_modules\@openviking\sdk
-```
-
-按 `config/cordis-patch.web.yml` / `cordis-patch.unity.yml` 把两行挂进对应 profile 的
-`cordis.patch.yml`，将 `<OPENVIKING_USER_KEY>` 换成上一步的 user key。
-
-⚠️ 插件包是纯 ESM、零构建；不要把插件包复制进 DSH 的 pnpm 依赖再跑 `pnpm install`
-（会把 `@deepseek-ai/*` 核心包复制/提升成双实例，破坏 harness）——按文档手动复制即可。
-
-重启 DSH Desktop。每个会话自动捕获 → 蒸馏 → 下次会话自动注入；也可手动调用
-`memory_recall / memory_write / memory_search / memory_profile / memory_forget`。
-
-### 3. 桌面快捷方式（可选但推荐）
-
-```powershell
-powershell -ExecutionPolicy Bypass -File deploy\make-shortcuts.ps1
-```
-
-在桌面生成「**OpenViking记忆-启动**」（绿 ▶）/「**OpenViking记忆-停止**」（红 ■）两个带图标的快捷方式。
-日常：先点启动 → 弹「已就绪」→ 再开 DSH；退出 DSH → 点停止。服务端必须在 DSH 之前启动
-（插件具备失败隔离，后起也会重试补上）。
-
-> ⚠️ **只在资源管理器里双击这些快捷方式，别从 DSH 的工具调用/前台 pwsh 里启动服务**：
-> 调用结束时整棵进程树会被 job object 回收，服务静默消失（日志表现为 `Connection error` +
-> `Embedding circuit breaker is open`）。
-
-## 注意事项
-
-- **记忆互通**：web / unity 两个 profile 共用同一个 `account/user`，记忆天然互通；要隔离就换成不同 user。
-- **token 开销**：每次会话蒸馏会调用 VLM API（带思维链的模型开销更大）；embedding 完全本地免费。
-- **版本依赖**：OpenViking 配置字段随版本变化，装完先跑 `openviking-server --config <ov.conf>` 验证；
-  OpenViking 服务端默认端口 1933（插件示例里的 18770 已过时，以实际端口为准）。
-- 密钥（VLM API key、root key、user key）请使用环境变量或本地文件管理，不要提交到仓库。
-
-## 上游
-
-- [zouyuanqing/dsh-memory-openviking](https://github.com/zouyuanqing/dsh-memory-openviking)（插件，MIT）
-- [volcengine/OpenViking](https://github.com/volcengine/OpenViking)（服务端，AGPLv3）
-- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DSH）
+*v0.5.1+ · Clear employer story: “local long-term memory for my coding agent.” 为 DSH 落地的本地长期记忆套件。*
